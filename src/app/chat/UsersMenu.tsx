@@ -8,8 +8,8 @@ import {
 import { UserResource } from "@clerk/types";
 import { Channel, UserResponse } from "stream-chat";
 import { ArrowLeft } from "lucide-react";
-import { pages } from "next/dist/build/templates/app-page";
 import LoadingButton from "@/components/LoadingButton";
+import useDebounce from "@/hooks/useDebounce";
 
 interface UsersMenuProps {
   loggedInUser: UserResource;
@@ -24,8 +24,10 @@ export default function UsersMenu({
 }: UsersMenuProps) {
   const { client, setActiveChannel } = useChatContext();
   const [users, setUsers] = useState<(UserResponse & { image?: string })[]>();
-
+  const [searchInput, setSearchInput] = useState("");
   const [moreUsersLoading, setMoreUsersLoading] = useState(false);
+
+  const searchInputDebounce = useDebounce(searchInput);
 
   const [endOfPaginationReached, setEndOfPaginationReached] =
     useState<boolean>();
@@ -34,12 +36,23 @@ export default function UsersMenu({
 
   useEffect(() => {
     async function loadInitialUsers() {
+      setUsers(undefined);
+      setEndOfPaginationReached(undefined);
+
       // await new Promise((resolve) => setTimeout(resolve, 1000));
 
       try {
         const response = await client.queryUsers(
           {
             id: { $ne: loggedInUser.id },
+            ...(searchInputDebounce
+              ? {
+                  $or: [
+                    { name: { $autocomplete: searchInputDebounce } },
+                    { id: { $autocomplete: searchInputDebounce } },
+                  ],
+                }
+              : {}),
           },
           { id: 1 },
           { limit: pageSize + 1 }
@@ -52,11 +65,10 @@ export default function UsersMenu({
       }
     }
     loadInitialUsers();
-  }, [client, loggedInUser.id]);
+  }, [client, loggedInUser.id, searchInputDebounce]);
 
   async function loadMoreUsers() {
     setMoreUsersLoading(true);
-
     // await new Promise((resolve) => setTimeout(resolve, 1000));
 
     try {
@@ -65,7 +77,18 @@ export default function UsersMenu({
 
       const response = await client.queryUsers(
         {
-          $and: [{ id: { $ne: loggedInUser.id } }, { id: { $gt: lastUserId } }],
+          $and: [
+            { id: { $ne: loggedInUser.id } },
+            { id: { $gt: lastUserId } },
+            searchInputDebounce
+              ? {
+                  $or: [
+                    { name: { $autocomplete: searchInputDebounce } },
+                    { id: { $autocomplete: searchInputDebounce } },
+                  ],
+                }
+              : {},
+          ],
         },
         { id: 1 },
         { limit: pageSize + 1 }
@@ -101,11 +124,20 @@ export default function UsersMenu({
 
   return (
     <div className="str-chat absolute z-10 h-full w-full border-e border-e-[#DBDDE1] bg-white">
-      <div className="flex items-center gap-3 p-3 text-lg font-bold">
-        <ArrowLeft onClick={onClose} className="cursor-pointer" /> Users
+      <div className="mb-3 flex flex-col p-3">
+        <div className="flex items-center gap-3 text-lg font-bold">
+          <ArrowLeft onClick={onClose} className="cursor-pointer" /> Users
+        </div>
+        <input
+          type="search"
+          placeholder="Search"
+          className="rounded-full border border-gray-300 px-4 py-2"
+          value={searchInput}
+          onChange={(e) => setSearchInput(e.target.value)}
+        />
       </div>
+
       <div>
-        {!users && <LoadingUsers />}
         {users?.map((user) => (
           <UserResult
             user={user}
@@ -113,8 +145,14 @@ export default function UsersMenu({
             key={user.id}
           />
         ))}
+        <div className="px-3">
+          {!users && !searchInputDebounce && <LoadingUsers />}
+          {!users && searchInput && "Searching..."}
+          {users?.length === 0 && <div>No users found</div>}
+        </div>
         {endOfPaginationReached === false && (
           <LoadingButton
+            onClick={loadMoreUsers}
             loading={moreUsersLoading}
             className="m-auto mb-3 w-[80%]"
           >
