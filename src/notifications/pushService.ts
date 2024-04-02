@@ -21,6 +21,7 @@ export async function registerPushNotification() {
   const sw = await getReadyServiceWOrker();
 
   const subscription = await sw.pushManager.subscribe({
+
     userVisibleOnly: true,
     applicationServerKey: env.NEXT_PUBLIC_WEB_PUSH_PUBLIC_KEY,
   });
