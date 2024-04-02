@@ -1,8 +1,14 @@
 import { UserButton } from "@clerk/nextjs";
-import { Moon, Sun, Users } from "lucide-react";
+import { BellOff, BellRing, Moon, Sun, Users } from "lucide-react";
 import { useTheme } from "../ThemeProvider";
 import { set } from "zod";
 import { dark } from "@clerk/themes";
+import { useEffect, useState } from "react";
+import {
+  getCurrentPushSubscription,
+  registerPushNotification,
+  unregisterPushNotifications,
+} from "@/notifications/pushService";
 
 interface MenuBarProps {
   onUserMenuCLick: () => void;
@@ -18,6 +24,7 @@ export default function MenuBar({ onUserMenuCLick }: MenuBarProps) {
         appearance={{ baseTheme: theme === "dark" ? dark : undefined }}
       />
       <div className="flex gap-6">
+        <PushSubscriptionToggleButton />
         <span title="Show Users">
           <Users className="cursor-pointer" onClick={onUserMenuCLick} />
         </span>
@@ -42,5 +49,60 @@ function ThemeToggleButton() {
     <span title="Enable dark theme">
       <Sun className="cursor-pointer" onClick={() => setTheme("dark")} />
     </span>
+  );
+}
+
+function PushSubscriptionToggleButton() {
+  const [hasActivePushSubscription, setHasActivePushSubscription] =
+    useState<boolean>();
+
+  useEffect(() => {
+    async function getActivePushSubscription() {
+      const subscription = await getCurrentPushSubscription();
+      setHasActivePushSubscription(!!subscription);
+    }
+
+    getActivePushSubscription();
+  }, []);
+
+  async function setPushNotificationbsEnabled(enabled: boolean) {
+    try {
+      if (enabled) {
+        // typo
+        await registerPushNotification();
+      } else {
+        await unregisterPushNotifications();
+      }
+      setHasActivePushSubscription(enabled);
+    } catch (error) {
+      console.error(error);
+      if (enabled && Notification.permission === "denied") {
+        alert("Please enable push notifications in your browser settings");
+      } else {
+        alert("Something went wrong, please try again.");
+      }
+    }
+  }
+
+  if (hasActivePushSubscription === undefined) return null;
+
+  return (
+    <div>
+      {hasActivePushSubscription ? (
+        <span title="Disable push notifications">
+          <BellOff
+            onClick={() => setPushNotificationbsEnabled(false)}
+            className="cursor-pointer"
+          />
+        </span>
+      ) : (
+        <span title="Enable push notifications">
+          <BellRing
+            onClick={() => setPushNotificationbsEnabled(true)}
+            className="cursor-pointer"
+          />
+        </span>
+      )}
+    </div>
   );
 }
