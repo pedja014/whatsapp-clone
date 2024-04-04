@@ -15,10 +15,17 @@ import {
   getCurrentPushSubscription,
   sendPushSubscriptionToServer,
 } from "@/notifications/pushService";
+import PushMessageListener from "./PushMessageListener";
+
+interface CahtPageProps {
+  searchParams: { channelId?: string };
+}
 
 const i18Instance = new Streami18n({ language: "en" });
 
-export default function ChatPage() {
+export default function ChatPage({
+  searchParams: { channelId },
+}: CahtPageProps) {
   const chatClient = useInitializeChatClient();
   const { user } = useUser();
   const { theme } = useTheme();
@@ -57,6 +64,12 @@ export default function ChatPage() {
 
     syncPushSubscription();
   }, []);
+
+  useEffect(() => {
+    if (channelId) {
+      history.replaceState(null, "", "/chat");
+    }
+  }, [channelId]);
 
   const handleSidebarOnClose = useCallback(() => {
     setChatSidebarOpen(false);
@@ -97,12 +110,14 @@ export default function ChatPage() {
               onClose={handleSidebarOnClose}
               user={user}
               show={isLargeScreen || chatSiedbarOpen}
+              customActiveChannel={channelId}
             />
             <ChatChannel
               hideChannelOnThread={!isLargeScreen}
               show={isLargeScreen || !chatSiedbarOpen}
             />
           </div>
+          <PushMessageListener />
         </Chat>
       </div>
     </div>
