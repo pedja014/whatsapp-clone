@@ -42,7 +42,7 @@ export default function ChatSidebar({
 
   return (
     <div
-      className={`relative w-full flex-col md:max-w-[300px]${
+      className={`relative w-full flex-col md:max-w-[300px] ${
         show ? "flex" : "hidden"
       }`}
     >

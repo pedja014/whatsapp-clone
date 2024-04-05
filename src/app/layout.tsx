@@ -7,7 +7,7 @@ import ThemeProvider from "./ThemeProvider";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Whatsapp clone",
+  title: "Messenger-4-Us",
   description: "A live chat app built with Stream and Clerk",
 };
 

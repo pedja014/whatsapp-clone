@@ -42,14 +42,20 @@ function ThemeToggleButton() {
   if (theme === "dark") {
     return (
       <span title="Enable light theme">
-        <Moon className="cursor-pointer" onClick={() => setTheme("light")} />
+        <Moon
+          className="rotate-0 scale-100 cursor-pointer transition-all dark:-rotate-90 "
+          onClick={() => setTheme("light")}
+        />
       </span>
     );
   }
 
   return (
     <span title="Enable dark theme">
-      <Sun className="cursor-pointer" onClick={() => setTheme("dark")} />
+      <Sun
+        className="rotate-90 cursor-pointer transition-all dark:rotate-0 dark:scale-100"
+        onClick={() => setTheme("dark")}
+      />
     </span>
   );
 }
