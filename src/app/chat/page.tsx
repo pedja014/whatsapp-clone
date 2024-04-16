@@ -9,7 +9,7 @@ import { useCallback, useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
 import useWindowSize from "@/hooks/useWindowSize";
 import { mdBreakpoint } from "@/utils/tailwind";
-import { useTheme } from "../ThemeProvider";
+import { useTheme } from "next-themes";
 import { registerServiceWorker } from "@/utils/serviceWorker";
 import {
   getCurrentPushSubscription,

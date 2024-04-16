@@ -1,6 +1,6 @@
 import { UserButton } from "@clerk/nextjs";
 import { BellOff, BellRing, Moon, Sun, Users } from "lucide-react";
-import { useTheme } from "../ThemeProvider";
+import { useTheme } from "next-themes";
 import { set } from "zod";
 import { dark } from "@clerk/themes";
 import { useEffect, useState } from "react";
